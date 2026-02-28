@@ -122,5 +122,41 @@ class IBIM:
         """
         return self.results
     
+    def all_good(self) -> bool:
+        """
+        Check if all components have been successfully processed.
+        
+        Returns:
+            True if all components have status 'processed', False otherwise
+        """
+        if not self.components:
+            return True  # No components means nothing to fail
+        return all(component.status == "processed" for component in self.components.values())
+    
+    def get_status_summary(self) -> Dict[str, Any]:
+        """
+        Get a summary of component statuses.
+        
+        Returns:
+            Dictionary containing status counts and component details
+        """
+        status_counts: Dict[str, int] = {}
+        component_statuses = []
+        
+        for component in self.components.values():
+            status = component.status
+            status_counts[status] = status_counts.get(status, 0) + 1
+            component_statuses.append({
+                "name": component.name,
+                "status": status
+            })
+        
+        return {
+            "total": len(self.components),
+            "status_counts": status_counts,
+            "all_good": self.all_good(),
+            "components": component_statuses
+        }
+    
     def __repr__(self) -> str:
         return f"IBIM(name='{self.name}', components={len(self.components)})"

@@ -14,6 +14,7 @@ IBIMjr provides a simple, modular approach to building and managing components w
 - Modular component architecture
 - Easy to extend and customize
 - Minimal dependencies
+- Component status tracking and validation
 
 ## Getting Started
 
@@ -36,6 +37,14 @@ ibim.add_component("component1", {"type": "basic"})
 
 # Process components
 ibim.process()
+
+# Check if all components are successfully processed
+if ibim.all_good():
+    print("All components processed successfully!")
+
+# Get detailed status summary
+summary = ibim.get_status_summary()
+print(f"Total: {summary['total']}, Status: {summary['status_counts']}")
 ```
 
 ## Project Structure
@@ -50,7 +59,8 @@ IBIMjr/
 │       ├── __init__.py
 │       └── core.py
 ├── examples/
-│   └── basic_usage.py
+│   ├── basic_usage.py
+│   └── status_checking.py
 └── tests/
     └── test_ibim.py
 ```

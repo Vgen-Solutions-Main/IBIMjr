@@ -95,6 +95,56 @@ def test_ibim_process():
     print("✓ IBIM process test passed")
 
 
+def test_ibim_all_good():
+    """Test all_good method for checking component statuses"""
+    ibim = IBIM()
+    
+    # Empty IBIM should be all good
+    assert ibim.all_good() is True
+    
+    # Add components but don't process
+    ibim.add_component("Component1")
+    ibim.add_component("Component2")
+    assert ibim.all_good() is False  # Not processed yet
+    
+    # Process all components
+    ibim.process()
+    assert ibim.all_good() is True  # All processed now
+    
+    print("✓ IBIM all_good test passed")
+
+
+def test_ibim_status_summary():
+    """Test get_status_summary method"""
+    ibim = IBIM()
+    
+    # Empty IBIM
+    summary = ibim.get_status_summary()
+    assert summary["total"] == 0
+    assert summary["all_good"] is True
+    assert len(summary["components"]) == 0
+    
+    # Add components
+    ibim.add_component("Component1")
+    ibim.add_component("Component2")
+    ibim.add_component("Component3")
+    
+    summary = ibim.get_status_summary()
+    assert summary["total"] == 3
+    assert summary["status_counts"]["initialized"] == 3
+    assert summary["all_good"] is False
+    
+    # Process components
+    ibim.process()
+    summary = ibim.get_status_summary()
+    assert summary["total"] == 3
+    assert summary["status_counts"]["processed"] == 3
+    assert summary["all_good"] is True
+    assert len(summary["components"]) == 3
+    
+    print("✓ IBIM status_summary test passed")
+
+
 def run_all_tests():
     """Run all tests"""
     print("Running IBIM tests...\n")
@@ -106,6 +156,8 @@ def run_all_tests():
     test_ibim_remove_component()
     test_ibim_get_component()
     test_ibim_process()
+    test_ibim_all_good()
+    test_ibim_status_summary()
     
     print("\n✓ All tests passed!")
 
