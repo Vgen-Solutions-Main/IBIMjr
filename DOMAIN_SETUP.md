@@ -73,13 +73,144 @@ GitHub Pages automatically provisions an SSL certificate for your custom domain.
 - Verify the GitHub Actions workflow completed successfully
 - Check that all required files are committed to the repository
 
+## BIMI Email Configuration
+
+BIMI (Brand Indicators for Message Identification) allows your brand logo to be displayed in supported email clients when you send emails from your domain. This requires proper email authentication and DNS configuration.
+
+### Prerequisites for BIMI
+
+Before configuring BIMI, you must have these email authentication records in place:
+
+1. **SPF (Sender Policy Framework)** - Authenticates which mail servers can send email on behalf of your domain
+2. **DKIM (DomainKeys Identified Mail)** - Adds a digital signature to your emails
+3. **DMARC (Domain-based Message Authentication, Reporting, and Conformance)** - Tells receiving servers how to handle emails that fail SPF/DKIM checks
+
+### SPF Record Configuration
+
+Add a TXT record for SPF to authorize mail servers:
+
+| Type | Host | Value | TTL |
+|------|------|-------|-----|
+| TXT Record | @ | v=spf1 include:_spf.google.com ~all | Automatic |
+
+*Note: Adjust the SPF record based on your email provider. Examples:*
+- **Gmail/Google Workspace**: `v=spf1 include:_spf.google.com ~all`
+- **Microsoft 365**: `v=spf1 include:spf.protection.outlook.com ~all`
+- **SendGrid**: `v=spf1 include:sendgrid.net ~all`
+- **Multiple providers**: `v=spf1 include:_spf.google.com include:sendgrid.net ~all`
+
+### DKIM Record Configuration
+
+DKIM records are provided by your email service provider. Contact your provider for the specific DKIM record to add.
+
+Typical format:
+
+| Type | Host | Value | TTL |
+|------|------|-------|-----|
+| TXT Record | [selector]._domainkey | v=DKIM1; k=rsa; p=[public-key] | Automatic |
+
+*The [selector] and [public-key] values are provided by your email service.*
+
+### DMARC Record Configuration
+
+DMARC is required for BIMI. Add a TXT record with a DMARC policy:
+
+| Type | Host | Value | TTL |
+|------|------|-------|-----|
+| TXT Record | _dmarc | v=DMARC1; p=quarantine; rua=mailto:dmarc@jelvanricolcol.pro; pct=100 | Automatic |
+
+**DMARC Policy Options:**
+- `p=none` - Monitor only (no enforcement)
+- `p=quarantine` - Send suspicious emails to spam (recommended for BIMI)
+- `p=reject` - Reject emails that fail authentication (strictest)
+
+**Important for BIMI**: Your DMARC policy must be set to `quarantine` or `reject` (not `none`) for BIMI to work.
+
+### BIMI Record Configuration
+
+Once SPF, DKIM, and DMARC are properly configured, add the BIMI record:
+
+| Type | Host | Value | TTL |
+|------|------|-------|-----|
+| TXT Record | default._bimi | v=BIMI1; l=https://jelvanricolcol.pro/IBIMjr.svg | Automatic |
+
+**BIMI Record Explanation:**
+- `v=BIMI1` - BIMI version
+- `l=` - Location of your brand logo (must be SVG format, served over HTTPS)
+
+**Logo Requirements:**
+- Must be in SVG Tiny 1.2 or SVG Portable/Secure format
+- Square aspect ratio (1:1) recommended
+- Solid background color (transparent backgrounds may not work in all email clients)
+- Maximum file size: 32 KB
+- Served over HTTPS from your verified domain
+
+### Verified Mark Certificate (VMC) - Optional
+
+For enhanced BIMI support in more email clients, you may need a VMC from a certificate authority. This is required by some email providers like Gmail.
+
+To add a VMC to your BIMI record:
+
+```
+v=BIMI1; l=https://jelvanricolcol.pro/IBIMjr.svg; a=https://jelvanricolcol.pro/vmc.pem
+```
+
+VMC providers include:
+- DigiCert
+- Entrust
+- CSC
+
+### Verification and Testing
+
+After configuring all records:
+
+1. **Verify DNS Propagation**: https://dnschecker.org
+   - Check TXT records for `@`, `_dmarc`, and `default._bimi`
+
+2. **Test SPF**: Use tools like MXToolbox SPF checker
+   - https://mxtoolbox.com/spf.aspx
+
+3. **Test DKIM**: Send a test email and check headers
+   - Or use your email provider's DKIM verification tool
+
+4. **Test DMARC**: https://mxtoolbox.com/dmarc.aspx
+   - Verify DMARC policy is set to `quarantine` or `reject`
+
+5. **Test BIMI**: 
+   - https://bimigroup.org/bimi-generator/
+   - Send test emails to BIMI-supported clients (Gmail, Yahoo, etc.)
+   - It may take 24-48 hours for BIMI to appear after configuration
+
+6. **Monitor DMARC Reports**: Check the email address specified in `rua=` for DMARC reports
+
+### Troubleshooting BIMI
+
+**Logo Not Appearing:**
+- Ensure DMARC policy is `quarantine` or `reject` (not `none`)
+- Verify SPF and DKIM authentication passes (99%+ pass rate required)
+- Check SVG format compliance (use BIMI validator)
+- Ensure logo is accessible via HTTPS
+- Allow 24-48 hours for email clients to cache BIMI records
+
+**DMARC Issues:**
+- Verify SPF includes all mail servers sending on your behalf
+- Ensure DKIM is properly configured with your email provider
+- Check DMARC reports for authentication failures
+
+**DNS Record Errors:**
+- Use `dig TXT default._bimi.jelvanricolcol.pro` to verify BIMI record
+- Use `dig TXT _dmarc.jelvanricolcol.pro` to verify DMARC record
+- Ensure no typos in record values
+
 ## Files Involved
 
 - `CNAME` - Contains your custom domain name
 - `_config.yml` - Jekyll configuration with domain URL
 - `.github/workflows/jekyll-gh-pages.yml` - GitHub Actions deployment workflow
+- `IBIMjr.svg` - Brand logo used for BIMI display in emails
 
 ## Support
 
 For DNS issues, contact Namecheap support: https://www.namecheap.com/support/
 For GitHub Pages issues, check: https://docs.github.com/pages
+For BIMI support, visit: https://bimigroup.org
